@@ -154,8 +154,10 @@ const handleLogout = () => {
       </div>
     )}
 
-      <main className="flex-grow flex w-full p-4">
-        {children}
+      <main className="flex-grow flex w-full p-4 overflow-hidden">
+        <div className="w-full overflow-x-auto">
+          {children}
+        </div>
       </main>
     </div>
   );

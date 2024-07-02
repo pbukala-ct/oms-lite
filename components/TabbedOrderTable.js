@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import OrderTable from './OrderTable';
 import {
   ShoppingCartIcon,
@@ -9,7 +9,9 @@ import {
   CheckIcon,
   TruckIcon,
   DocumentIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 const statusIcons = {
@@ -38,13 +40,42 @@ const predefinedStatusOrder = [
 
 export default function TabbedOrderTable({ orders, onUpdateOrderState, orderStates, actionLabels, onOrderExpand, onTabChange }) {
     const [activeTab, setActiveTab] = useState(predefinedStatusOrder[0].key);
-
     const [expandedOrder, setExpandedOrder] = useState(null);
-    
-    const handleTabClick = (status) => {
-      setActiveTab(status);
-      onTabChange();
+    const tabsRef = useRef(null);
+    const [showLeftArrow, setShowLeftArrow] = useState(false);
+    const [showRightArrow, setShowRightArrow] = useState(false);
+
+
+
+  useEffect(() => {
+    const checkForArrows = () => {
+      if (tabsRef.current) {
+        setShowLeftArrow(tabsRef.current.scrollLeft > 0);
+        setShowRightArrow(
+          tabsRef.current.scrollWidth > tabsRef.current.clientWidth &&
+          tabsRef.current.scrollLeft < tabsRef.current.scrollWidth - tabsRef.current.clientWidth
+        );
+      }
     };
+
+    checkForArrows();
+    window.addEventListener('resize', checkForArrows);
+    return () => window.removeEventListener('resize', checkForArrows);
+  }, []);
+
+  const scroll = (direction) => {
+    if (tabsRef.current) {
+      const scrollAmount = tabsRef.current.clientWidth / 2;
+      tabsRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+ 
+
+
+
     const handleOrderExpand = (orderId) => {
       const newExpandedOrder = expandedOrder === orderId ? null : orderId;
       setExpandedOrder(newExpandedOrder);
@@ -108,7 +139,37 @@ export default function TabbedOrderTable({ orders, onUpdateOrderState, orderStat
 
   return (
     <div className="bg-white shadow rounded-lg overflow-hidden">
-      <div className="border-b border-gray-200">
+
+      <div className="relative">
+              {showLeftArrow && (
+                <button
+                  onClick={() => scroll('left')}
+                  className="absolute left-0 top-0 bottom-0 z-10 bg-gradient-to-r from-white to-transparent px-2"
+                >
+                  <ChevronLeftIcon className="h-5 w-5 text-gray-500" />
+                </button>
+              )}
+              {showRightArrow && (
+                <button
+                  onClick={() => scroll('right')}
+                  className="absolute right-0 top-0 bottom-0 z-10 bg-gradient-to-l from-white to-transparent px-2"
+                >
+                  <ChevronRightIcon className="h-5 w-5 text-gray-500" />
+                </button>
+              )}
+              <div 
+                ref={tabsRef}
+                className="border-b border-gray-200 overflow-x-auto scrollbar-hide"
+                onScroll={() => {
+                  setShowLeftArrow(tabsRef.current.scrollLeft > 0);
+                  setShowRightArrow(
+                    tabsRef.current.scrollWidth > tabsRef.current.clientWidth &&
+                    tabsRef.current.scrollLeft < tabsRef.current.scrollWidth - tabsRef.current.clientWidth
+                  );
+                }}
+              >
+
+      {/* <div className="border-b border-gray-200"> */}
       <nav className="flex" aria-label="Tabs">
           {predefinedStatusOrder.map((status) => {
             const IconComponent = statusIcons[status.key];
@@ -133,6 +194,7 @@ export default function TabbedOrderTable({ orders, onUpdateOrderState, orderStat
             );
           })}
         </nav>
+        </div>
       </div>
       {activeTab && (
         <div className="bg-ct-blue-light border-l-4 border-ct-blue px-6 py-3 mb-4">
@@ -141,7 +203,7 @@ export default function TabbedOrderTable({ orders, onUpdateOrderState, orderStat
         </p>
       </div>
       )}
-      <div className="p-4">
+      <div className="overflow-x-auto">
         {renderOrderTable(activeTab, ordersByStatus[activeTab])}
       </div>
     </div>

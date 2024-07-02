@@ -95,40 +95,45 @@ export default function OrderTable({ orders = [], onUpdateOrderState, orderState
   }
 
   return (
-    <div className="relative">  {/* Add this wrapper div */}
+   
+
+<div className="overflow-x-auto shadow-md sm:rounded-lg">
+      <div className="min-w-full inline-block align-middle">
+        <div className="overflow-hidden">
+
 
     <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-ct-blue-light">
-        <tr>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Order ID
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Order Date
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Customer
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Order Status
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Payment State
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Shipping Method
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Shipping Address
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Total
-          </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider">
-            Action
-          </th>
-        </tr>
-      </thead>
+    <thead className="bg-ct-blue-light">
+  <tr>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[100px]">
+      Order ID
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+      Order Date
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[150px]">
+      Customer
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+      Order Status
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+      Payment State
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[140px]">
+      Shipping Method
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[200px]">
+      Shipping Address
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[100px]">
+      Total
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[150px]">
+      Action
+    </th>
+  </tr>
+</thead>
       <tbody className="bg-white divide-y divide-gray-200">
         {orders.map((order) => (
           <Fragment key={order.id}>
@@ -235,6 +240,8 @@ export default function OrderTable({ orders = [], onUpdateOrderState, orderState
         ))}
       </tbody>
     </table>
+    </div>
+    </div>
     </div>
   );
 }
