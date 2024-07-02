@@ -1,21 +1,21 @@
 import { createApiBuilderFromCtpClient } from '@commercetools/platform-sdk'
 import { ClientBuilder } from '@commercetools/sdk-client-v2'
 
-const projectKey = 'country-road'
-const scopes = ['manage_project:country-road']
+const projectKey = process.env.NEXT_PUBLIC_CTP_PROJECT_KEY
+const scopes = [process.env.NEXT_PUBLIC_CTP_SCOPE]
 
 const ctpClient = new ClientBuilder()
   .withClientCredentialsFlow({
-    host: 'https://auth.australia-southeast1.gcp.commercetools.com',
+    host: process.env.NEXT_PUBLIC_CTP_AUTH_URL,
     projectKey,
     credentials: {
-      clientId: 'UQQEGRZoTshhDlsD784Ui-Gh',
-      clientSecret: '64DdbsCDBy5HTFEDu5hAkRgcTJ1yffCA',
+      clientId: process.env.CTP_CLIENT_ID,
+      clientSecret: process.env.CTP_CLIENT_SECRET,
     },
     scopes,
   })
   .withHttpMiddleware({
-    host: 'https://api.australia-southeast1.gcp.commercetools.com',
+    host: process.env.NEXT_PUBLIC_CTP_API_URL,
   })
   .build()
 

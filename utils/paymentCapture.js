@@ -2,11 +2,12 @@ import { apiRoot } from './commercetools-client'
 import fetch from 'node-fetch';
 
 
-const AUTH_HOST = 'auth.australia-southeast1.gcp.commercetools.com'; 
-const CLIENT_ID = 'UQQEGRZoTshhDlsD784Ui-Gh';
-const CLIENT_SECRET = '64DdbsCDBy5HTFEDu5hAkRgcTJ1yffCA';
-const PROJECT_KEY = 'country-road'
-const SCOPE = `manage_project:${PROJECT_KEY}`;
+const AUTH_HOST = process.env.NEXT_PUBLIC_CTP_AUTH_URL.replace('https://', '');
+const CLIENT_ID = process.env.CTP_CLIENT_ID;
+const CLIENT_SECRET = process.env.CTP_CLIENT_SECRET;
+const PROJECT_KEY = process.env.NEXT_PUBLIC_CTP_PROJECT_KEY;
+const SCOPE = process.env.NEXT_PUBLIC_CTP_SCOPE;
+const REGION = process.env.NEXT_PUBLIC_CTP_REGION;
 
 
 const getAuthToken = async () => {
