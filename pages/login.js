@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import { verifyCustomer } from '../utils/verifyCustomer';
+import ErrorToast from '../components/ErrorToast';
 
 
 export default function Login() {
@@ -26,13 +27,14 @@ export default function Login() {
     }
 
     setLoading(true);
-    const result = await verifyCustomer(email);
+    const result = await verifyCustomer(email, password);
     setLoading(false);
 
     if (result.success) {
       localStorage.setItem('selectedChannel', result.storeId);
       localStorage.setItem('userEmail', email);
       localStorage.setItem('allStores', false);
+      localStorage.setItem('authToken', result.token); // Store the auth token
       router.push('/orders');
     } else {
       setError(result.message);
@@ -42,6 +44,7 @@ export default function Login() {
   return (
     
     <div className="min-h-screen flex flex-col items-center justify-center bg-ct-blue-light py-12 px-4 sm:px-6 lg:px-8">
+      {error && <ErrorToast message={error} onClose={() => setError('')} />}
       <div className="max-w-md w-full space-y-8">
         <div className="flex flex-col items-center">
           <div className="w-64 h-24 relative mb-8">
@@ -92,9 +95,9 @@ export default function Login() {
               />
             </div>
           </div>
-          {error && (
+          {/* {error && (
             <div className="text-red-500 text-sm">{error}</div>
-          )}
+          )} */}
           <div>
             <button
               type="submit"
