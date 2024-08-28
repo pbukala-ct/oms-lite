@@ -5,6 +5,11 @@ import { fetchChannels } from '../utils/channels';
 import { apiRoot } from '../utils/commercetools-client'
 import OrderManagement from '../components/OrderManagement';
 import { paymentCapture } from '../utils/paymentCapture';
+import { fetchOrders } from '../utils/fetchOrders';
+// import { useNotifications } from '../components/Notifications';
+import { useNotification } from '../context/NotificationContext';
+
+
 
 export default function Orders() {
 
@@ -28,10 +33,11 @@ export default function Orders() {
   const [orderStates, setOrderStates] = useState({});
   const [selectedChannel, setSelectedChannel] = useState('');
   const [allStores, setAllStores] = useState(true);
+  const { addNotification } = useNotification();
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
+  // useEffect(() => {
+  //   fetchOrders();
+  // }, [selectedChannel, allStores]);
 
   useEffect(() => {
     const userEmail = localStorage.getItem('userEmail');
@@ -40,130 +46,26 @@ export default function Orders() {
     }
   }, [router]);
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrdersData = useCallback(async () => {
     try {
       setLoading(true);
-
-      // Fetch channels first
-    const channels = await fetchChannels();
-    const channelMap = channels.reduce((acc, channel) => {
-      acc[channel.id] = channel.name;
-      return acc;
-    }, {});
-
-    // Get the selected channel and allStores state from localStorage
-    const selectedChannel = localStorage.getItem('selectedChannel');
-    const allStores = JSON.parse(localStorage.getItem('allStores') || 'true');
-
-    // Prepare the query
-    let where = null;
-    
-    console.log("Selected channel: " + selectedChannel);
-
-    if (!allStores && selectedChannel) {
-      where = `custom(fields(channel(id="${selectedChannel}")))`;
-    }
-
-      const response = await apiRoot
-        .orders()
-        .get({
-          queryArgs: {
-            limit: 100,
-            expand: ['state', 'lineItems[*].variant', 'paymentInfo.payments[*]','custom.type', 'custom.fields.channel'],
-            sort: ['createdAt desc'],
-            where: where
-          },
-        })
-        .execute()
-
+      const selectedChannel = localStorage.getItem('selectedChannel');
+      const allStores = JSON.parse(localStorage.getItem('allStores') || 'true');
       
-  
-      console.log('Response received:', response);
-
-        // Fetch all order states
-        const statesResponse = await apiRoot
-        .states()
-        .get({
-        queryArgs: {
-            where: 'type="OrderState"',
-        },
-        })
-        .execute()
-
-        const orderStates = statesResponse.body.results.reduce((acc, state) => {
-        acc[state.key] = state;
-        return acc;
-        }, {});
-
-        console.log('Order states:', orderStates);
-
-  
-       
-
-
-      const formattedOrders = response.body.results
-      .filter(order => {
-        const hasValidState = order.state && order.state.obj;
-       // console.log(`Order ${order.id} has valid state: ${hasValidState}`);
-        return hasValidState;
-      })
-        .map(order => ({
-
-          //const channelId = order.custom?.fields?.channel?.obj?.id;
-
-
-          id: order.id,
-          version: order.version,
-          createdAt: order.createdAt,
-          customer: order.customerEmail || 'N/A',
-          customerName: order.shippingAddress.firstName +' ' + order.shippingAddress.lastName,
-          orderState: order.state.obj.key,
-          orderStateObj: orderStates[order.state.obj.key],
-          paymentState: order.paymentState,
-          shippingInfo: order.shippingInfo,
-          shippingAddress: order.shippingAddress,
-          status: order.state.obj.key,
-          paymentInfo: order.paymentInfo,
-          notes: order.custom?.fields?.['order-notes'] || [],
-          statusDescription: order.state.obj.description.en || order.state.obj.key,
-          allocatedStore: order.custom?.fields?.channel?.obj?.id ? {
-            id: order.custom?.fields?.channel?.obj?.id,
-            name: channelMap[order.custom?.fields?.channel?.obj?.id] || 'Unknown Store'
-          } : null,
-          
-          total: `$${(order.totalPrice.centAmount / 100).toFixed(2)} ${order.totalPrice.currencyCode}`,
-          lineItems: order.lineItems.map(item => ({
-            productKey: item.productKey,
-            name: item.name,
-            variant: item.variant,
-            quantity: item.quantity,
-          })),
-          paymentTransactions: order.paymentInfo?.payments
-          .flatMap(payment => payment.obj.transactions.map(transaction => ({
-            type: transaction.type,
-            state: transaction.state,
-            amount: `${(transaction.amount.centAmount / 100).toFixed(2)} ${transaction.amount.currencyCode}`
-          }))) || []
-          }));
-        
-  
-      console.log('Formatted orders:', formattedOrders);
-  
-      setOrders(formattedOrders)
-      setOrderStates(orderStates)  // Add this line
-
-      setLoading(false)
+      const { formattedOrders, orderStates } = await fetchOrders(selectedChannel, allStores);
+      
+      setOrders(formattedOrders);
+      setOrderStates(orderStates);
+      setLoading(false);
     } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError('Failed to fetch orders. Please try again.');
+      setError(err.message);
       setLoading(false);
     }
-  }, [selectedChannel, allStores]);
+  },  [selectedChannel, allStores]);
 
- 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    fetchOrdersData();
+  }, [fetchOrdersData]);
 
    
 
@@ -183,7 +85,7 @@ export default function Orders() {
       // If the next state is 'print' (which comes after 'payment-confirmation'),
       // we need to capture the payment first
       if (nextState === 'print') {
-        console.log("Trying to capture payemnts");
+        console.log("Capturing payment with commercetools checkout APIs");
         const authorizedPayment = order.paymentInfo?.payments.find(payment => 
           payment.obj?.transactions.some(transaction => 
             transaction.type === 'Authorization' && transaction.state === 'Success'
@@ -205,8 +107,7 @@ export default function Orders() {
         }
       }
 
-
-
+      const currentTimestamp = new Date().toISOString();
 
       const updatedOrder = await apiRoot
         .orders()
@@ -221,6 +122,11 @@ export default function Orders() {
                     typeId: "state",
                     id: stateId
                 }
+              },
+              {
+                action : "setCustomField",
+                name: "timestamp",
+                value: currentTimestamp
               }
             ]
         }
@@ -241,7 +147,8 @@ export default function Orders() {
             return newOrders;
      } );
       
-        
+     showSuccess('Order Updated', `Order ${order.id} has been moved to ${nextState} state.`);
+  
     } catch (error) {
       console.error('Failed to update order state:', error);
       // Handle error (e.g., show an error message to the user)
@@ -253,7 +160,14 @@ export default function Orders() {
     console.log("handleStoreFilterChange: " + channel)
     setSelectedChannel(channel);
     setAllStores(allStores);
+    addNotification('Store has been changed', 'info');
   }, []);
+
+  const testNotification = () => {
+    addNotification('This is a test notification', 'info');
+  };
+
+
 
 
   if (loading) {
@@ -279,6 +193,10 @@ export default function Orders() {
 
   return (
     <Layout onStoreFilterChange={handleStoreFilterChange}>
+
+{/* <button onClick={testNotification}>Test Notification</button> */}
+
+
       <OrderManagement
         orders={orders}
         onUpdateOrderState={onUpdateOrderState}

@@ -1,12 +1,17 @@
 module.exports = {
   content: [
     "./pages/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}"
+
   ],
   theme: {
     extend: {
       animation: {
         'fade-in-down': 'fadeInDown 0.5s ease-out',
+      },
+      zIndex: {
+        '100': '100',
+        'max': '9999',
       },
       keyframes: {
         fadeInDown: {
@@ -21,7 +26,7 @@ module.exports = {
         'ct-blue': '#6359ff',
         'ct-blue-dark': '#6359ff',
         'ct-blue-light': '#e8f9f7',
-        'ct-green': '#20AD92', // Add this line for the commercetools green color
+        'ct-green': '#20AD92', 
       },
     },
   },
@@ -31,6 +36,9 @@ module.exports = {
       textColor: ['active'],
     },
   },
+  // corePlugins: {
+  //   preflight: false, // This prevents Tailwind from resetting PrimeReact styles
+  // },
   plugins: [
     function({ addUtilities }) {
       const newUtilities = {

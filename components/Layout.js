@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { fetchChannels } from '../utils/channels.js'; // Adjust the import path as needed
 import { useRouter } from 'next/router';
+import { useNotifications } from './Notifications';
 
 
 const Layout = ({ children, onStoreFilterChange }) => {
@@ -15,6 +16,7 @@ const Layout = ({ children, onStoreFilterChange }) => {
   const [selectedChannelName, setSelectedChannelName] = useState('');
   const [userEmail, setUserEmail] = useState('');
   const router = useRouter();
+  const { NotificationsComponent } = useNotifications();
 
 
 
@@ -147,6 +149,7 @@ const handleLogout = () => {
           </div>
         </div>
       </nav>
+      {/* <NotificationsComponent /> */}
       {selectedChannelName && !allStores && (
       <div className="bg-ct-blue text-white py-4 px-6 text-center">
         <p className="text-sm font-medium mb-1">Selected Store</p>
@@ -154,7 +157,7 @@ const handleLogout = () => {
       </div>
     )}
 
-      <main className="flex-grow flex w-full p-4 overflow-hidden">
+<main className="flex-grow flex w-full p-4 pt-16 overflow-hidden">
         <div className="w-full overflow-x-auto">
           {children}
         </div>

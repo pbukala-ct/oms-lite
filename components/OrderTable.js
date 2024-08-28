@@ -3,6 +3,8 @@ import { useState, Fragment } from 'react';
 import Image from 'next/image';
 import ImagePopover from './ImagePopover';
 import { generatePackingSlip } from '../utils/printPackingSlip';
+import { getProcessingTime } from '../utils/timeUtils';
+import { useNotifications } from './Notifications';
 
 
 const predefinedStatusOrder = [
@@ -19,10 +21,22 @@ const predefinedStatusOrder = [
 
 export default function OrderTable({ orders = [], onUpdateOrderState, orderStates, actionLabels, expandedOrder, onOrderExpand }) {
   const [updatingOrder, setUpdatingOrder] = useState(null);
-  // const [expandedOrder, setExpandedOrder] = useState(null);
+  const { showInfo } = useNotifications();
+
 
   const formatDate = (dateString) => {
     return format(new Date(dateString), 'dd MMM yyyy');
+  };
+
+  const getRowClassName = (processingStatus) => {
+    switch (processingStatus) {
+      case 'critical':
+        return 'bg-red-100';
+      case 'warning':
+        return 'bg-yellow-100';
+      default:
+        return '';
+    }
   };
 
   const getStatusColor = (status) => {
@@ -72,6 +86,8 @@ export default function OrderTable({ orders = [], onUpdateOrderState, orderState
 
   const handleUpdateState = async (orderId, nextState) => {
     setUpdatingOrder(orderId);
+    showInfo('Processing', `Updating order ${orderId} ...`);
+
     await onUpdateOrderState(orderId, nextState.key);
     setUpdatingOrder(null);
   };
@@ -118,6 +134,9 @@ export default function OrderTable({ orders = [], onUpdateOrderState, orderState
       Order Status
     </th>
     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+      Processing time
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[120px]">
       Payment State
     </th>
     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-ct-blue-dark uppercase tracking-wider whitespace-nowrap min-w-[140px]">
@@ -135,11 +154,15 @@ export default function OrderTable({ orders = [], onUpdateOrderState, orderState
   </tr>
 </thead>
       <tbody className="bg-white divide-y divide-gray-200">
-        {orders.map((order) => (
+        {orders.map((order) => {
+          const { text: processingTime, status: processingStatus } = getProcessingTime(order.timestamp);
+          return(
           <Fragment key={order.id}>
              <tr 
               className={`hover:bg-purple-50 cursor-pointer transition-colors duration-150 ease-in-out
-                ${expandedOrder === order.id ? 'bg-purple-100' : ''}`}
+                ${expandedOrder === order.id ? 'bg-purple-100' : ''} 
+                ${getRowClassName(processingStatus)}
+                `}
                 onClick={() => onOrderExpand(order.id)} >
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{truncateOrderId(order.id)}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(order.createdAt)}</td>
@@ -147,6 +170,14 @@ export default function OrderTable({ orders = [], onUpdateOrderState, orderState
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.orderState)}`}>
                   {order.orderState}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <span className={`
+                  ${processingStatus === 'critical' ? 'text-red-600 font-bold' : ''}
+                  ${processingStatus === 'warning' ? 'text-yellow-600' : ''}
+                `}>
+                  {processingTime}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.paymentState}</td>
@@ -236,9 +267,10 @@ export default function OrderTable({ orders = [], onUpdateOrderState, orderState
                 </td>
               </tr>
             )}
-          </Fragment>
-        ))}
-      </tbody>
+        </Fragment>
+        );
+      })}
+    </tbody>
     </table>
     </div>
     </div>
